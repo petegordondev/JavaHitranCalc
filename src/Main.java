@@ -11,9 +11,6 @@ public class Main {
     private static int gasTally = new File(System.getProperty("user.dir") + "/data/HitranData/").list().length;
 
     // Values.
-
-
-
     private static final int KAPPA_LO = 2200;
     private static final int KAPPA_HI = 2500;
     private static final float DELTA_KAPPA = (float) (0.0603/2);
@@ -58,8 +55,6 @@ public class Main {
         // Divide the result by 2*deltakappa to get the average intensity.
         // Assign result to the midway value kappa+deltakappa.
 
-
-
         // Write to output file.
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(outputFile), "UTF-8"))) {
@@ -72,7 +67,7 @@ public class Main {
                 }
                 s /= (2 * DELTA_KAPPA);
 
-      writer.write(kappa + ", " + s + "\n");
+                writer.write(kappa + ", " + s + "\n");
 
             }
             writer.close();
@@ -119,9 +114,11 @@ class DataFileHelper {
         try {
             if (in != null) {
                 while ((line = in.readLine()) != null) {
-                    // Parse line for values.
+                    // Remove annoying whitespace and null characters added by HITRAN.
                     line = line.replaceAll("\\s+","");
                     line = line.replaceAll("\\u0000","");
+
+                    // Parse line for the necessary values.
                     Scanner scanner = new Scanner(line);
                     scanner.useDelimiter(",");
                     scanner.nextInt();
