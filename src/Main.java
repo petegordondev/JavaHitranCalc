@@ -1,10 +1,7 @@
 import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class Main {
 
@@ -39,9 +36,11 @@ public class Main {
         File outputFile = new File(dirOut, name + ".csv");
 
         // Load data file.
-        List<String> hitranData = new DataFileHelper(inputFile).toStringArray();
+        List<Double[]> hitranData = new DataFileHelper(inputFile).toStringArray();
 
         // Process.
+
+        // Write to output file.
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(outputFile), "UTF-8"))) {
             writer.write("derp");
@@ -59,12 +58,12 @@ class DataFileHelper {
         this.file = file;
     }
 
-    List<String> toStringArray(){
+    List<Double[]> toStringArray(){
         return read();
     }
 
-    private List<String> read(){
-        List<String> l = new ArrayList<>();
+    private List<Double[]> read(){
+        List<Double[]> l = new ArrayList<>();
         // Read lines from file.
         BufferedReader in = null;
         try {
@@ -77,8 +76,18 @@ class DataFileHelper {
         try {
             if (in != null) {
                 while ((line = in.readLine()) != null) {
-                    // Add each line to ArrayList.
-                    l.add(line);
+                    // Parse line for values.
+                    Double[] values = new Double[4];
+                    line = line.replaceAll("\\s+","");
+                    line = line.replaceAll("\\u0000","");
+                    Scanner scanner = new Scanner(line);
+                    scanner.useDelimiter(",");
+                    for (int i = 0; i < 4; i++){
+                        values[i] = scanner.nextDouble();
+                    }
+                    System.out.println(values[3].toString());
+                    // Add line of values to ArrayList.
+                    l.add(values);
                 }
             }
         } catch (IOException e) {
