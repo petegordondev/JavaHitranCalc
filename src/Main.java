@@ -11,9 +11,9 @@ public class Main {
     private static int gasTally = new File(System.getProperty("user.dir") + "/data/HitranData/").list().length;
 
     // Values.
-    private static final int KAPPA_LO = 500;
-    private static final int KAPPA_HI = 750;
-    private static final double DELTA_KAPPA = 0.0603/2;
+    private static final int KAPPA_LO = 600;
+    private static final int KAPPA_HI = 4000;
+    private static final float DELTA_KAPPA = (float) (0.0603/2);
 
 
     public static void main(String[] args) {
@@ -25,8 +25,8 @@ public class Main {
         }
     }
 
-    private static double ILNZ(int kappa, double kappa0, double gamma){
-        return 0;
+    private static double lorentzIntegral(float kappa, float kappa0, float gamma){
+        return (1/Math.PI) * Math.atan((kappa - kappa0)/gamma);
     }
 
     private static void processGas(File inputFile) {
@@ -45,7 +45,7 @@ public class Main {
         File outputFile = new File(dirOut, name + ".csv");
 
         // Load data file.
-        List<Double[]> hitranData = new DataFileHelper(inputFile).toStringArray();
+        List<LineStrength> hitranData = new DataFileHelper(inputFile).read();
 
         // Process.
         // Integrate each line within bandwidth.
@@ -55,15 +55,39 @@ public class Main {
 
 
         // Write to output file.
-//        try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-//                new FileOutputStream(outputFile), "UTF-8"))) {
-//            for (int kappa = KAPPA_LO; kappa <= KAPPA_HI; kappa++){
-//
-//                writer.write(kappa + ", " + result);
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(outputFile), "UTF-8"))) {
+            for (float kappa = KAPPA_LO; kappa <= KAPPA_HI; kappa += 2 * DELTA_KAPPA){
+                double s = 0;
+                for (LineStrength aHitranData : hitranData) {
+                    double v = lorentzIntegral(kappa + DELTA_KAPPA, aHitranData.waveNumber, aHitranData.airWidth);
+                    v -= lorentzIntegral(kappa - DELTA_KAPPA, aHitranData.waveNumber, aHitranData.airWidth);
+                    s += aHitranData.lineStrength * v;
+                }
+                s /= (2 * DELTA_KAPPA);
+
+      writer.write(kappa + ", " + s + "\n");
+
+            }
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+class LineStrength {
+    // Represents a HITRAN data point.
+
+    final float waveNumber;
+    final double lineStrength;
+    final float airWidth;
+
+    LineStrength(float waveNumber, double lineStrength, float airWidth) {
+
+        this.waveNumber = waveNumber;
+        this.lineStrength = lineStrength;
+        this.airWidth = airWidth;
     }
 }
 
@@ -75,12 +99,8 @@ class DataFileHelper {
         this.file = file;
     }
 
-    List<Double[]> toStringArray(){
-        return read();
-    }
-
-    private List<Double[]> read(){
-        List<Double[]> l = new ArrayList<>();
+    List<LineStrength> read(){
+        List<LineStrength> l = new ArrayList<>();
         // Read lines from file.
         BufferedReader in = null;
         try {
@@ -94,16 +114,23 @@ class DataFileHelper {
             if (in != null) {
                 while ((line = in.readLine()) != null) {
                     // Parse line for values.
-                    Double[] values = new Double[7];
                     line = line.replaceAll("\\s+","");
                     line = line.replaceAll("\\u0000","");
                     Scanner scanner = new Scanner(line);
                     scanner.useDelimiter(",");
-                    for (int i = 0; i < 7; i++){
-                        values[i] = scanner.nextDouble();
-                    }
-                    // System.out.println(values[0].toString());
-                    // Add line of values to ArrayList.
+                    scanner.nextInt();
+                    scanner.nextInt();
+                    float waveNumber = scanner.nextFloat();
+                    double lineStrength = scanner.nextDouble();
+                    scanner.nextDouble();
+                    float airWidth = scanner.nextFloat();
+
+
+                    LineStrength values = new LineStrength(waveNumber, lineStrength, airWidth);
+
+                    System.out.println( values.waveNumber + ", " + values.lineStrength + ", " + values.airWidth);
+
+                    // Add values to ArrayList.
                     l.add(values);
                 }
             }
