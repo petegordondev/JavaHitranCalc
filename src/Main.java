@@ -1,11 +1,16 @@
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
 
-    private static File dir = new File(System.getProperty("user.dir") + "/data/HitranData/");
-    private static File[] directoryListing = dir.listFiles();
+    private static File dirIn = new File(System.getProperty("user.dir") + "/data/HitranData/");
+    private static File dirOut = new File(System.getProperty("user.dir") + "/data/Output/");
+    private static File[] directoryListing = dirIn.listFiles();
     private static int gasTally = new File(System.getProperty("user.dir") + "/data/HitranData/").list().length;
 
 
@@ -18,11 +23,38 @@ public class Main {
         }
     }
 
-    private static void processGas(File file) {
-        // Load file.
-        List<String> hitranData = new DataFileHelper(file).toStringArray();
-        // Process.
+    private static void processGas(File inputFile) {
 
+        // Create output file.
+//        if(!dirOut.exists()){
+//            dirOut.mkdir();}
+
+        String name = inputFile.getName();
+        int pos = name.lastIndexOf(".");
+        if (pos > 0) {
+            name = name.substring(0, pos);
+        }
+
+        File outputFile = new File(dirOut, name + ".csv");
+//        if(!outputFile.exists()){
+//            try {
+//                outputFile.createNewFile();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+
+        // Load data file.
+        List<String> hitranData = new DataFileHelper(inputFile).toStringArray();
+
+        // Process.
+        // outputFile.setWritable(true);
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(outputFile), "utf-8"))) {
+            writer.write("something");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 
