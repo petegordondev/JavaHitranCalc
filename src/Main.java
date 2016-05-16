@@ -26,8 +26,9 @@ public class Main {
     private static void processGas(File inputFile) {
 
         // Create output file.
-//        if(!dirOut.exists()){
-//            dirOut.mkdir();}
+        if(!dirOut.exists()){
+            //noinspection ResultOfMethodCallIgnored
+            dirOut.mkdir();}
 
         String name = inputFile.getName();
         int pos = name.lastIndexOf(".");
@@ -36,22 +37,14 @@ public class Main {
         }
 
         File outputFile = new File(dirOut, name + ".csv");
-//        if(!outputFile.exists()){
-//            try {
-//                outputFile.createNewFile();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
 
         // Load data file.
         List<String> hitranData = new DataFileHelper(inputFile).toStringArray();
 
         // Process.
-        // outputFile.setWritable(true);
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(outputFile), "utf-8"))) {
-            writer.write("something");
+                new FileOutputStream(outputFile), "UTF-8"))) {
+            writer.write("derp");
         } catch (IOException e) {
             e.printStackTrace();
         }
