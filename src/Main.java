@@ -1,7 +1,5 @@
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
 
@@ -10,8 +8,13 @@ public class Main {
     private static File[] directoryListing = dirIn.listFiles();
 
     // Values.
-    private static final int KAPPA_LO = 2200;
-    private static final int KAPPA_HI = 2500;
+    private static final int RANGE_LO = 400;
+    private static final int RANGE_HI = 4000;
+
+    private static final float RES_FINE = (float) (0.0603/2);
+    private static final float RES_COARSE = (float) (100/2);
+
+    private static final float RANGE_RES_FINE = 200;
     private static final float DELTA_KAPPA = (float) (0.0603/2);
 
 
@@ -54,20 +57,72 @@ public class Main {
         // Divide the result by 2*deltakappa to get the average intensity.
         // Assign result to the midway value kappa+deltakappa.
 
+
+        // Get coarse map of features.
+
+        HashMap<Float, Double> coarseMap = new LinkedHashMap<>();
+
+        for (float kappa = RANGE_LO; kappa <= RANGE_HI; kappa += 2 * RES_COARSE) {
+            double s = 0;
+            for (LineStrength aHitranData : hitranData) {
+                double v = lorentzIntegral(kappa + RES_COARSE, aHitranData.waveNumber, aHitranData.airWidth);
+                v -= lorentzIntegral(kappa - RES_COARSE, aHitranData.waveNumber, aHitranData.airWidth);
+                s += aHitranData.lineStrength * v;
+            }
+            s /= (2 * RES_COARSE);
+
+            coarseMap.put(kappa, s);
+        }
+
+        // Identify feature locations.
+
+        System.out.print("Identifying feature locations: ");
+
+        List<Float> mapKeyIndex = new ArrayList<>();
+        List<Float> features = new ArrayList<>();
+        for (Map.Entry<Float, Double> entry : coarseMap.entrySet()) {
+            mapKeyIndex.add(entry.getKey());
+        }
+
+        for (int i = 0; i < mapKeyIndex.size(); i++){
+
+            float keyCurr = mapKeyIndex.get(i);
+            double valCurr = coarseMap.get(keyCurr);
+            if (i != 0 && i != mapKeyIndex.size() - 1){
+                // Check neighbour values.
+                float keyPrev = mapKeyIndex.get(i - 1);
+                double valPrev = coarseMap.get(keyPrev);
+                float keyNext = mapKeyIndex.get(i + 1);
+                double valNext = coarseMap.get(keyNext);
+
+                if (valCurr > valPrev && valCurr > valNext){
+                    // Found a feature so record location.
+                    features.add(keyCurr);
+                    System.out.print(keyCurr + " cm-1, ");
+                }
+            }
+        }
+
+        System.out.println();
+
+        // Render features in detail.
         // Write to output file.
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(outputFile), "UTF-8"))) {
-            for (float kappa = KAPPA_LO; kappa <= KAPPA_HI; kappa += 2 * DELTA_KAPPA){
-                double s = 0;
-                for (LineStrength aHitranData : hitranData) {
-                    double v = lorentzIntegral(kappa + DELTA_KAPPA, aHitranData.waveNumber, aHitranData.airWidth);
-                    v -= lorentzIntegral(kappa - DELTA_KAPPA, aHitranData.waveNumber, aHitranData.airWidth);
-                    s += aHitranData.lineStrength * v;
+            for (Float feature : features){
+                System.out.print("Rendering " + name + " " + feature + " cm-1 feature... ");
+                for (float kappa = feature - RANGE_RES_FINE; kappa <= feature + RANGE_RES_FINE; kappa += 2 * DELTA_KAPPA){
+                    double s = 0;
+                    for (LineStrength aHitranData : hitranData) {
+                        double v = lorentzIntegral(kappa + DELTA_KAPPA, aHitranData.waveNumber, aHitranData.airWidth);
+                        v -= lorentzIntegral(kappa - DELTA_KAPPA, aHitranData.waveNumber, aHitranData.airWidth);
+                        s += aHitranData.lineStrength * v;
+                    }
+                    s /= (2 * DELTA_KAPPA);
+
+                    writer.write(kappa + ", " + s + "\n");
                 }
-                s /= (2 * DELTA_KAPPA);
-
-                writer.write(kappa + ", " + s + "\n");
-
+                System.out.println("Complete");
             }
             writer.close();
         } catch (IOException e) {
