@@ -11,8 +11,11 @@ public class Main {
     private static int gasTally = new File(System.getProperty("user.dir") + "/data/HitranData/").list().length;
 
     // Values.
-    private static final int KAPPA_LO = 600;
-    private static final int KAPPA_HI = 4000;
+
+
+
+    private static final int KAPPA_LO = 2200;
+    private static final int KAPPA_HI = 2500;
     private static final float DELTA_KAPPA = (float) (0.0603/2);
 
 
@@ -31,6 +34,7 @@ public class Main {
 
     private static void processGas(File inputFile) {
 
+
         // Create output file.
         if(!dirOut.exists()){
             //noinspection ResultOfMethodCallIgnored
@@ -41,6 +45,8 @@ public class Main {
         if (pos > 0) {
             name = name.substring(0, pos);
         }
+
+        System.out.println("Processing file: " + name);
 
         File outputFile = new File(dirOut, name + ".csv");
 
@@ -125,10 +131,7 @@ class DataFileHelper {
                     scanner.nextDouble();
                     float airWidth = scanner.nextFloat();
 
-
                     LineStrength values = new LineStrength(waveNumber, lineStrength, airWidth);
-
-                    System.out.println( values.waveNumber + ", " + values.lineStrength + ", " + values.airWidth);
 
                     // Add values to ArrayList.
                     l.add(values);
