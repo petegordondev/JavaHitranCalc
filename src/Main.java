@@ -8,7 +8,6 @@ public class Main {
     private static File dirIn = new File(System.getProperty("user.dir") + "/data/HitranData/");
     private static File dirOut = new File(System.getProperty("user.dir") + "/data/Output/");
     private static File[] directoryListing = dirIn.listFiles();
-    private static int gasTally = new File(System.getProperty("user.dir") + "/data/HitranData/").list().length;
 
     // Values.
     private static final int KAPPA_LO = 2200;
