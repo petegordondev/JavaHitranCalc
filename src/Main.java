@@ -191,6 +191,14 @@ class DataFileHelper {
             e.printStackTrace();
         }
 
+        try {
+            if (in != null) {
+                in.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         return l;
     }
 
