@@ -11,11 +11,10 @@ public class Main {
     private static final int RANGE_LO = 400;
     private static final int RANGE_HI = 4000;
 
-    private static final float RES_FINE = (float) (0.0603/2);
     private static final float RES_COARSE = (float) (100/2);
 
     private static final float RANGE_RES_FINE = 200;
-    private static final float DELTA_KAPPA = (float) (0.0603/2);
+    private static final float RES_FINE = (float) (0.0603/2);
 
 
     public static void main(String[] args) {
@@ -111,14 +110,14 @@ public class Main {
                 new FileOutputStream(outputFile), "UTF-8"))) {
             for (Float feature : features){
                 System.out.print("Rendering " + name + " " + feature + " cm-1 feature... ");
-                for (float kappa = feature - RANGE_RES_FINE; kappa <= feature + RANGE_RES_FINE; kappa += 2 * DELTA_KAPPA){
+                for (float kappa = feature - RANGE_RES_FINE; kappa <= feature + RANGE_RES_FINE; kappa += 2 * RES_FINE){
                     double s = 0;
                     for (LineStrength aHitranData : hitranData) {
-                        double v = lorentzIntegral(kappa + DELTA_KAPPA, aHitranData.waveNumber, aHitranData.airWidth);
-                        v -= lorentzIntegral(kappa - DELTA_KAPPA, aHitranData.waveNumber, aHitranData.airWidth);
+                        double v = lorentzIntegral(kappa + RES_FINE, aHitranData.waveNumber, aHitranData.airWidth);
+                        v -= lorentzIntegral(kappa - RES_FINE, aHitranData.waveNumber, aHitranData.airWidth);
                         s += aHitranData.lineStrength * v;
                     }
-                    s /= (2 * DELTA_KAPPA);
+                    s /= (2 * RES_FINE);
 
                     writer.write(kappa + ", " + s + "\n");
                 }
