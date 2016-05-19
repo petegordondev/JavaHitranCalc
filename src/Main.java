@@ -8,7 +8,7 @@ public class Main {
     private static File[] directoryListing = dirIn.listFiles();
 
     // Values.
-    private static final int RANGE_LO = 400;
+    private static final int RANGE_LO = 600;
     private static final int RANGE_HI = 4000;
 
     private static final float RES_COARSE = (float) (100/2);
@@ -26,8 +26,8 @@ public class Main {
         }
     }
 
-    private static double lorentzIntegral(float kappa, float kappa0, float gamma){
-        return (1/Math.PI) * Math.atan((kappa - kappa0)/gamma);
+    private static double lorentz(float nu, float nu0, float gamma){
+        return (1/Math.PI) * gamma/(Math.pow((nu - nu0),2) + Math.pow(gamma,2));
     }
 
     private static void processGas(File inputFile) {
@@ -52,25 +52,18 @@ public class Main {
         List<LineStrength> hitranData = new DataFileHelper(inputFile).read();
 
         // Process.
-        // Integrate each line within bandwidth.
-        // Divide the result by 2*deltakappa to get the average intensity.
-        // Assign result to the midway value kappa+deltakappa.
-
 
         // Get coarse map of features.
 
         HashMap<Float, Double> coarseMap = new LinkedHashMap<>();
 
-        for (float kappa = RANGE_LO; kappa <= RANGE_HI; kappa += 2 * RES_COARSE) {
-            double s = 0;
+        for (float nu = RANGE_LO; nu <= RANGE_HI; nu += 2 * RES_COARSE) {
+            double theta = 0;
             for (LineStrength aHitranData : hitranData) {
-                double v = lorentzIntegral(kappa + RES_COARSE, aHitranData.waveNumber, aHitranData.airWidth);
-                v -= lorentzIntegral(kappa - RES_COARSE, aHitranData.waveNumber, aHitranData.airWidth);
-                s += aHitranData.lineStrength * v;
+                double theta_nu = aHitranData.lineStrength * lorentz(nu, aHitranData.waveNumber, aHitranData.airWidth);
+                theta += theta_nu;
             }
-            s /= (2 * RES_COARSE);
-
-            coarseMap.put(kappa, s);
+            coarseMap.put(nu, theta);
         }
 
         // Identify feature locations.
@@ -110,16 +103,14 @@ public class Main {
                 new FileOutputStream(outputFile), "UTF-8"))) {
             for (Float feature : features){
                 System.out.print("Rendering " + name + " " + feature + " cm-1 feature... ");
-                for (float kappa = feature - RANGE_RES_FINE; kappa <= feature + RANGE_RES_FINE; kappa += 2 * RES_FINE){
-                    double s = 0;
+                for (float nu = feature - RANGE_RES_FINE/2; nu <= feature + RANGE_RES_FINE/2; nu += 2 * RES_FINE) {
+                    double theta = 0;
                     for (LineStrength aHitranData : hitranData) {
-                        double v = lorentzIntegral(kappa + RES_FINE, aHitranData.waveNumber, aHitranData.airWidth);
-                        v -= lorentzIntegral(kappa - RES_FINE, aHitranData.waveNumber, aHitranData.airWidth);
-                        s += aHitranData.lineStrength * v;
+                        double theta_nu = aHitranData.lineStrength * lorentz(nu, aHitranData.waveNumber, aHitranData.airWidth);
+                        theta += theta_nu;
                     }
-                    s /= (2 * RES_FINE);
 
-                    writer.write(kappa + ", " + s + "\n");
+                    writer.write(nu + ", " + theta + "\n");
                 }
                 System.out.println("Complete");
             }
