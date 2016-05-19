@@ -14,7 +14,7 @@ public class Main {
     private static final float RES_COARSE = (float) (100/2);
 
     private static final float RANGE_RES_FINE = 200;
-    private static final float RES_FINE = (float) (0.0603/2);
+    private static final float RES_FINE = (float) (0.03/2);
 
 
     public static void main(String[] args) {
