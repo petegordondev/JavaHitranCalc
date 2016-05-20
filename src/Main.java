@@ -1,4 +1,6 @@
 import java.io.*;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.*;
 
 public class Main {
@@ -105,7 +107,7 @@ public class Main {
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(outputFile), "UTF-8"))) {
             for (Float feature : features){
-                long startTime = System.nanoTime();
+                Timer t = new Timer();
                 System.out.print("Rendering " + name + " " + feature + " cm-1 feature... ");
                 for (float nu = feature - RANGE_RES_FINE/2; nu <= feature + RANGE_RES_FINE/2; nu += 2 * RES_FINE) {
                     double theta = 0;
@@ -116,9 +118,7 @@ public class Main {
 
                     writer.write(nu + ", " + theta + "\n");
                 }
-                long endTime = System.nanoTime();
-                long duration = (endTime - startTime)/1000000;
-                System.out.println("Complete (" + duration + " ms)");
+                t.end();
             }
             writer.close();
             System.out.print("\n\n");
@@ -152,7 +152,7 @@ class DataFileHelper {
     }
 
     List<LineStrength> read(){
-        long startTime = System.nanoTime();
+        Timer t = new Timer();
         List<LineStrength> l = new ArrayList<>();
         // Read lines from file.
         System.out.print("Loading HITRAN data from file... ");
@@ -199,11 +199,26 @@ class DataFileHelper {
             e.printStackTrace();
         }
 
-        long endTime = System.nanoTime();
-        long duration = (endTime - startTime)/1000000;
-        System.out.println("Complete (" + duration + " ms)");
+        t.end();
 
         return l;
     }
+}
 
+class Timer{
+    private long startTime;
+    Timer() {
+        this.startTime = System.nanoTime();
+    }
+    void end(){
+        long endTime = System.nanoTime();
+        long duration = (endTime - startTime)/1000000;
+        if (duration < 1000){
+            System.out.println("Complete (" + duration + " ms)");
+        } else {
+            DecimalFormat df = new DecimalFormat("#.##");
+            df.setRoundingMode(RoundingMode.CEILING);
+            System.out.println("Complete (" + df.format( (float) duration/1000) + " s)");
+        }
+    }
 }
