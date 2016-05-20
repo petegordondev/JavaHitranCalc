@@ -68,7 +68,7 @@ public class Main {
 
         // Identify feature locations.
 
-        System.out.print("Identifying feature locations: ");
+        System.out.print("\nFeature locations: ");
 
         List<Float> mapKeyIndex = new ArrayList<>();
         List<Float> features = new ArrayList<>();
@@ -90,18 +90,22 @@ public class Main {
                 if (valCurr > valPrev && valCurr > valNext){
                     // Found a feature so record location.
                     features.add(keyCurr);
-                    System.out.print(keyCurr + " cm-1, ");
                 }
             }
         }
 
-        System.out.println();
+        for (int i = 0; i < features.size(); i++){
+            System.out.print(features.get(i) + " cm-1");
+            if (i < features.size() - 1) System.out.print(", ");
+        }
+        System.out.print("\n\n");
 
         // Render features in detail.
         // Write to output file.
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(outputFile), "UTF-8"))) {
             for (Float feature : features){
+                long startTime = System.nanoTime();
                 System.out.print("Rendering " + name + " " + feature + " cm-1 feature... ");
                 for (float nu = feature - RANGE_RES_FINE/2; nu <= feature + RANGE_RES_FINE/2; nu += 2 * RES_FINE) {
                     double theta = 0;
@@ -112,9 +116,12 @@ public class Main {
 
                     writer.write(nu + ", " + theta + "\n");
                 }
-                System.out.println("Complete");
+                long endTime = System.nanoTime();
+                long duration = (endTime - startTime)/1000000;
+                System.out.println("Complete (" + duration + " ms)");
             }
             writer.close();
+            System.out.print("\n\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -145,8 +152,10 @@ class DataFileHelper {
     }
 
     List<LineStrength> read(){
+        long startTime = System.nanoTime();
         List<LineStrength> l = new ArrayList<>();
         // Read lines from file.
+        System.out.print("Loading HITRAN data from file... ");
         BufferedReader in = null;
         try {
             in = new BufferedReader(new FileReader(file));
@@ -189,6 +198,10 @@ class DataFileHelper {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        long endTime = System.nanoTime();
+        long duration = (endTime - startTime)/1000000;
+        System.out.println("Complete (" + duration + " ms)");
 
         return l;
     }
