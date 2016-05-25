@@ -56,7 +56,7 @@ public class Main {
         List<LineStrength> hitranData = new DataFileHelper(inputFile).read();
 
 
-        System.out.print(name + " has " + hitranData.size() + " lines. Would you like to do a full scan?: ");
+        System.out.print(name + " has " + hitranData.size() + " lines. Would you like to do a full render?: ");
 
         Scanner scanner = new Scanner(System.in);
         String userInput = scanner.next();
