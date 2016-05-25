@@ -53,75 +53,86 @@ public class Main {
         // Load data file.
         List<LineStrength> hitranData = new DataFileHelper(inputFile).read();
 
-        // Process.
-
-        // Get coarse map of features.
-
-        HashMap<Float, Double> coarseMap = new LinkedHashMap<>();
-
-        for (float nu = RANGE_LO; nu <= RANGE_HI; nu += 2 * RES_COARSE) {
-            double theta = 0;
-            for (LineStrength aHitranData : hitranData) {
-                double theta_nu = aHitranData.lineStrength * lorentz(nu, aHitranData.waveNumber, aHitranData.airWidth);
-                theta += theta_nu;
-            }
-            coarseMap.put(nu, theta);
-        }
-
-        // Identify feature locations.
-
-        System.out.print("\nFeature locations: ");
-
-        List<Float> mapKeyIndex = new ArrayList<>();
-        List<Float> features = new ArrayList<>();
-        for (Map.Entry<Float, Double> entry : coarseMap.entrySet()) {
-            mapKeyIndex.add(entry.getKey());
-        }
-
-        for (int i = 0; i < mapKeyIndex.size(); i++){
-
-            float keyCurr = mapKeyIndex.get(i);
-            double valCurr = coarseMap.get(keyCurr);
-            if (i != 0 && i != mapKeyIndex.size() - 1){
-                // Check neighbour values.
-                float keyPrev = mapKeyIndex.get(i - 1);
-                double valPrev = coarseMap.get(keyPrev);
-                float keyNext = mapKeyIndex.get(i + 1);
-                double valNext = coarseMap.get(keyNext);
-
-                if (valCurr > valPrev && valCurr > valNext){
-                    // Found a feature so record location.
-                    features.add(keyCurr);
-                }
-            }
-        }
-
-        for (int i = 0; i < features.size(); i++){
-            System.out.print(features.get(i) + " cm-1");
-            if (i < features.size() - 1) System.out.print(", ");
-        }
-        System.out.print("\n\n");
-
-        // Render features in detail.
-        // Write to output file.
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(outputFile), "UTF-8"))) {
-            for (Float feature : features){
-                Timer t = new Timer();
-                System.out.print("Rendering " + name + " " + feature + " cm-1 feature... ");
-                for (float nu = feature - RANGE_RES_FINE/2; nu <= feature + RANGE_RES_FINE/2; nu += 2 * RES_FINE) {
-                    double theta = 0;
-                    for (LineStrength aHitranData : hitranData) {
-                        double theta_nu = aHitranData.lineStrength * lorentz(nu, aHitranData.waveNumber, aHitranData.airWidth);
-                        theta += theta_nu;
-                    }
 
-                    writer.write(nu + ", " + theta + "\n");
+        boolean fullScan = false;
+
+        // Process.
+
+        if (fullScan){
+            // Process all lines.
+        }
+        else {
+
+            // Get coarse map of features.
+
+            HashMap<Float, Double> coarseMap = new LinkedHashMap<>();
+
+            for (float nu = RANGE_LO; nu <= RANGE_HI; nu += 2 * RES_COARSE) {
+                double theta = 0;
+                for (LineStrength aHitranData : hitranData) {
+                    double theta_nu = aHitranData.lineStrength * lorentz(nu, aHitranData.waveNumber, aHitranData.airWidth);
+                    theta += theta_nu;
                 }
-                t.end();
+                coarseMap.put(nu, theta);
             }
-            writer.close();
+
+            // Identify feature locations.
+
+            System.out.print("\nFeature locations: ");
+
+            List<Float> mapKeyIndex = new ArrayList<>();
+            List<Float> features = new ArrayList<>();
+            for (Map.Entry<Float, Double> entry : coarseMap.entrySet()) {
+                mapKeyIndex.add(entry.getKey());
+            }
+
+            for (int i = 0; i < mapKeyIndex.size(); i++) {
+
+                float keyCurr = mapKeyIndex.get(i);
+                double valCurr = coarseMap.get(keyCurr);
+                if (i != 0 && i != mapKeyIndex.size() - 1) {
+                    // Check neighbour values.
+                    float keyPrev = mapKeyIndex.get(i - 1);
+                    double valPrev = coarseMap.get(keyPrev);
+                    float keyNext = mapKeyIndex.get(i + 1);
+                    double valNext = coarseMap.get(keyNext);
+
+                    if (valCurr > valPrev && valCurr > valNext) {
+                        // Found a feature so record location.
+                        features.add(keyCurr);
+                    }
+                }
+            }
+
+            for (int i = 0; i < features.size(); i++) {
+                System.out.print(features.get(i) + " cm-1");
+                if (i < features.size() - 1) System.out.print(", ");
+            }
             System.out.print("\n\n");
+
+            // Render features in detail.
+            // Write to output file.
+
+                for (Float feature : features) {
+                    Timer t = new Timer();
+                    System.out.print("Rendering " + name + " " + feature + " cm-1 feature... ");
+                    for (float nu = feature - RANGE_RES_FINE / 2; nu <= feature + RANGE_RES_FINE / 2; nu += 2 * RES_FINE) {
+                        double theta = 0;
+                        for (LineStrength aHitranData : hitranData) {
+                            double theta_nu = aHitranData.lineStrength * lorentz(nu, aHitranData.waveNumber, aHitranData.airWidth);
+                            theta += theta_nu;
+                        }
+
+                        writer.write(nu + ", " + theta + "\n");
+                    }
+                    t.end();
+                }
+                writer.close();
+                System.out.print("\n\n");
+
+        }
         } catch (IOException e) {
             e.printStackTrace();
         }
