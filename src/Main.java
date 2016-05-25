@@ -50,18 +50,42 @@ public class Main {
 
         File outputFile = new File(dirOut, name + ".csv");
 
+
+
         // Load data file.
         List<LineStrength> hitranData = new DataFileHelper(inputFile).read();
+
+
+        System.out.print(name + " has " + hitranData.size() + " lines. Would you like to do a full scan?: ");
+
+        Scanner scanner = new Scanner(System.in);
+        String userInput = scanner.next();
+
+        boolean fullScan = userInput.equalsIgnoreCase("y") || userInput.equalsIgnoreCase("yes");
 
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(outputFile), "UTF-8"))) {
 
-        boolean fullScan = false;
+
 
         // Process.
 
         if (fullScan){
             // Process all lines.
+
+            System.out.print("\nCalculating over all lines in spectral range. This could take some time... ");
+
+            Timer t = new Timer();
+            for (float nu = RANGE_LO; nu <= RANGE_HI; nu += 2 * RES_FINE) {
+                double theta = 0;
+                for (LineStrength aHitranData : hitranData) {
+                    double theta_nu = aHitranData.lineStrength * lorentz(nu, aHitranData.waveNumber, aHitranData.airWidth);
+                    theta += theta_nu;
+                }
+                writer.write(nu + ", " + theta + "\n");
+            }
+            writer.close();
+            t.end();
         }
         else {
 
